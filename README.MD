@@ -28,7 +28,7 @@ brew install go
 ## Clone repository
 
 ```
-git@github.com:tanirei39/test-rei.git
+git clone git@github.com:tanirei39/test-rei.git
 ```
 
 ## go
