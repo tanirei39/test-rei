@@ -13,10 +13,22 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+### install git
+
+```
+brew install git
+```
+
 ### install go
 
 ```
 brew install go
+```
+
+## Clone repository
+
+```
+git@github.com:tanirei39/test-rei.git
 ```
 
 ## go
@@ -41,6 +53,6 @@ curl "http://localhost:8080/bar"
 
 ## Github
 
-# Link
+# URL
 
 - https://test-rei-7f37dm2jna-an.a.run.app/foo
