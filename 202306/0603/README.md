@@ -9,7 +9,29 @@
 - command ファイルをダブルクリック：画面分割表示
 
 ## github
-
+### basic command
 1. add
 2. commit
 3. push
+
+- パスフレーズ不要にする：https://fumidzuki.com/knowledge/3401/
+
+```
+git add .
+
+git commit  -m "コミットメッセージ"
+s
+git push origin head
+```
+
+- branch: 
+
+### optional command
+- stash: 一時的にファイルを避難させるためのコマンド
+```
+git stash -u
+
+git stash pop
+```
+
+- chaery-pick: 
