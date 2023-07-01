@@ -9,14 +9,21 @@
     <tr>
       <th>ID</th>
       <th>メッセージ</th>
+      <th>削除</th>
     </tr>
     {{ range . }}
     <tr>
       <td>{{.Id}}</td>
       <td>{{.Text}}</td>
+      <td> <button onclick="location.href='./message-delete/{{.Id}}'">削除</button></td>
     </tr>
     {{ end }}
   </table>
   <button onclick="location.href='./message-form'">新規投稿</button>
 </body>
 </html>
+
+<script>
+  function OneChanged(){
+  }
+ </script>

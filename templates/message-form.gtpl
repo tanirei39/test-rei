@@ -12,18 +12,8 @@
         <td><input type="text" name="message_text"></td>
       </tr>
     </table>
-    <button onclick="sendMessage();">投稿</button>
+    <input type="submit" value="投稿">
   </form>
   <button onclick="history.back()">戻る</button>
-
-  <script>
-      let ws = new WebSocket("ws://localhost:" + global.backendPort + "/web/app/events");
-      function sendMessage(){
-        ws.send(JSON.stringify({
-          "event": "event-name",
-          "AtrNameInFrontend": "Hello World!",
-        }))
-      }
-    </script>
 </body>
 </html>

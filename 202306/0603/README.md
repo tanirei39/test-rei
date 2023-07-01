@@ -14,7 +14,7 @@
 2. commit
 3. push
 
-- パスフレーズ不要にする：https://fumidzuki.com/knowledge/3401/
+- パスフレーズ不要にする：httpsg://fumidzuki.com/knowledge/3401/
 
 ```
 git add .
@@ -24,7 +24,13 @@ s
 git push origin head
 ```
 
-- branch: 
+- branch:
+```
+//新しいブランチ
+$ git branch <branchname>
+//ブランチの切り替え
+$ git checkout <branchname>
+```
 
 ### optional command
 - stash: 一時的にファイルを避難させるためのコマンド

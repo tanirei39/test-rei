@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -25,12 +26,10 @@ func main() {
 	// })
 
 	connectMySQL()
-	// "user-form"へのリクエストを関数で処理する
-	http.HandleFunc("/message-form", HandlerUserForm)
-	// "message-confirm"へのリクエストを関数で処理する
+	http.HandleFunc("/message-form", HandlerMessageForm)
 	http.HandleFunc("/message-confirm", RedirectHandlerMessageConfirm)
-	// "user-confirm"へのリクエストを関数で処理する
 	http.HandleFunc("/message-list", HandlerUserConfirm)
+	http.HandleFunc("/message-delete/", HandlerMessageDelete)
 
 	// sqlInsert()
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -38,7 +37,7 @@ func main() {
 }
 
 // 投稿入力画面
-func HandlerUserForm(w http.ResponseWriter, r *http.Request) {
+func HandlerMessageForm(w http.ResponseWriter, r *http.Request) {
 	// テンプレートをパースする
 	tpl := template.Must(template.ParseFiles("templates/message-form.gtpl"))
 
@@ -51,6 +50,7 @@ func HandlerUserForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 　投稿登録画面
 func RedirectHandlerMessageConfirm(w http.ResponseWriter, r *http.Request) {
 	//データ登録
 	messageInsert(r.FormValue("message_text"))
@@ -107,6 +107,17 @@ func HandlerUserConfirm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HandlerMessageDelete(w http.ResponseWriter, r *http.Request) {
+	//データ登録
+
+	id := strings.TrimPrefix(r.URL.Path, "/message-delete/")
+
+	//データ削除
+	messageDelete(id)
+
+	http.Redirect(w, r, "/message-list", 301)
+}
+
 func messageInsert(message string) {
 	// データベースのハンドルを取得する
 	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
@@ -125,6 +136,36 @@ func messageInsert(message string) {
 
 	// SQLの実行
 	res, err := ins.Exec(message)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 結果の取得
+	lastInsertID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(lastInsertID)
+}
+
+func messageDelete(id string) {
+	// データベースのハンドルを取得する
+	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
+	if err != nil {
+		// ここではエラーを返さない
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// SQLの準備
+	del, err := db.Prepare("DELETE FROM messages WHERE message_id = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer del.Close()
+
+	// SQLの実行
+	res, err := del.Exec(id)
 	if err != nil {
 		log.Fatal(err)
 	}
