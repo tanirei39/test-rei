@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // マスタからSELECTしたデータをマッピングする構造体
