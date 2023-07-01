@@ -14,7 +14,7 @@
 2. commit
 3. push
 
-- パスフレーズ不要にする：httpsg://fumidzuki.com/knowledge/3401/
+- パスフレーズ不要にする：https://qiita.com/blueray777/items/78eb5983997e4c94e590
 
 ```
 git add .
