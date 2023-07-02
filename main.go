@@ -1,196 +1,65 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/tanirei39/test-rei/database"
 )
 
-// マスタからSELECTしたデータをマッピングする構造体
-type MESSAGE struct {
-	Id   string `db:"message_id"`
-	Text string `db:"message_text"`
-}
-
 func main() {
-	// http.Handle("/foo", fooHandler)
 	fmt.Println("run server")
 
-	// http.HandleFunc("/foo", func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Fprintf(w, "れいなだお, %q", html.EscapeString(r.URL.Path))
-	// })
-
-	connectMySQL()
+	database.Connect()
 	http.HandleFunc("/message-form", HandlerMessageForm)
 	http.HandleFunc("/message-confirm", RedirectHandlerMessageConfirm)
 	http.HandleFunc("/message-list", HandlerUserConfirm)
 	http.HandleFunc("/message-delete/", HandlerMessageDelete)
 
-	// sqlInsert()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
 // 投稿入力画面
 func HandlerMessageForm(w http.ResponseWriter, r *http.Request) {
-	// テンプレートをパースする
-	tpl := template.Must(template.ParseFiles("templates/message-form.gtpl"))
-
 	// テンプレートに出力する値をマップにセット
 	values := map[string]string{}
 
-	// マップを展開してテンプレートを出力する
+	// マップを展開してテンプレートを出力&テンプレートをパースする
+	tpl := template.Must(template.ParseFiles("templates/message-form.gtpl"))
 	if err := tpl.ExecuteTemplate(w, "message-form.gtpl", values); err != nil {
 		fmt.Println(err)
 	}
 }
 
-// 　投稿登録画面
+// 　投稿登録画面(リダイレクトで一覧に戻る)
 func RedirectHandlerMessageConfirm(w http.ResponseWriter, r *http.Request) {
 	//データ登録
-	messageInsert(r.FormValue("message_text"))
+	database.Insert(r.FormValue("message_text"))
 	http.Redirect(w, r, "/message-list", 301)
 }
 
 // 投稿一覧画面
 func HandlerUserConfirm(w http.ResponseWriter, r *http.Request) {
-	// テンプレートをパースする
+	// MySQLからデータ取得(テンプレートに出力する値)
+	ml := database.Select("SELECT message_id,message_text FROM messages")
+
+	// マップを展開してテンプレートを出力&テンプレートをパースする
 	tpl := template.Must(template.ParseFiles("templates/message-list.gtpl"))
-
-	// データベース接続
-	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
-	if err != nil {
-		// log.Fatal(err)
-		fmt.Println("データベース接続に失敗しました。")
-	}
-	// deferで処理終了前に必ず接続をクローズする
-	defer db.Close()
-
-	// プリペアードステートメント
-	ins, err := db.Prepare("SELECT message_id,message_text FROM messages")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// クエリ実行
-	rows, err := ins.Query()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	var ml []MESSAGE
-
-	for rows.Next() {
-		// 構造体宣言
-		var message MESSAGE
-		err = rows.Scan(&message.Id, &message.Text)
-		// 配列にScan結果を追加
-		ml = append(ml, message)
-	}
-
-	if err != nil {
-		fmt.Println("データベース接続失敗")
-		log.Fatal(err)
-	} else {
-		fmt.Println("データベース接続成功")
-	}
-
-	// マップを展開してテンプレートを出力する
 	if err := tpl.ExecuteTemplate(w, "message-list.gtpl", ml); err != nil {
 		fmt.Println(err)
 	}
 }
 
+// 　投稿削除画面(リダイレクトで一覧に戻る)
 func HandlerMessageDelete(w http.ResponseWriter, r *http.Request) {
-	//データ登録
-
+	//id取得&データ削除
 	id := strings.TrimPrefix(r.URL.Path, "/message-delete/")
-
-	//データ削除
-	messageDelete(id)
-
+	database.Delete(id)
+	//一覧画面へリダイレクト
 	http.Redirect(w, r, "/message-list", 301)
-}
-
-func messageInsert(message string) {
-	// データベースのハンドルを取得する
-	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
-	if err != nil {
-		// ここではエラーを返さない
-		fmt.Println("データベース接続に失敗しました。")
-	}
-	defer db.Close()
-
-	// SQLの準備
-	ins, err := db.Prepare("INSERT INTO messages(message_text) VALUES(?)")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer ins.Close()
-
-	// SQLの実行
-	res, err := ins.Exec(message)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 結果の取得
-	lastInsertID, err := res.LastInsertId()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(lastInsertID)
-}
-
-func messageDelete(id string) {
-	// データベースのハンドルを取得する
-	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
-	if err != nil {
-		// ここではエラーを返さない
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	// SQLの準備
-	del, err := db.Prepare("DELETE FROM messages WHERE message_id = ?")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer del.Close()
-
-	// SQLの実行
-	res, err := del.Exec(id)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 結果の取得
-	lastInsertID, err := res.LastInsertId()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(lastInsertID)
-}
-
-func connectMySQL() {
-	// データベースのハンドルを取得する
-	db, err := sql.Open("mysql", "root:rei0309@tcp(localhost:3306)/testrei")
-	// db, err := sql.Open("mysql", "gouser:hogehoge@tcp(localhost:3306)/go_test")
-	if err != nil {
-		// ここではエラーを返さない
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	// 実際に接続する
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Println("データベース接続完了")
-	}
 }
