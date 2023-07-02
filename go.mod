@@ -1,4 +1,4 @@
-module main.go
+module github.com/tanirei39/test-rei
 
 go 1.19
 
