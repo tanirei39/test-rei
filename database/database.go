@@ -23,13 +23,14 @@ func Connect() {
 }
 
 // Queryの実行
-func Select(queryText string) []entity.Message {
+func SelectAll() []entity.Message {
 	db := openDB()
 	defer db.Close()
-	ins, err := db.Prepare(queryText)
+	ins, err := db.Prepare("SELECT message_id,message_text FROM messages")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer ins.Close()
 
 	// クエリ実行
 	rows, err := ins.Query()
@@ -53,7 +54,61 @@ func Select(queryText string) []entity.Message {
 	}
 
 	return ml
+}
 
+func Select(id string) string {
+	db := openDB()
+	defer db.Close()
+
+	// SQLの実行
+	ins, err := db.Prepare("SELECT message_id,message_text FROM messages where message_id = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ins.Close()
+
+	// クエリ実行
+	rows, err := ins.Query(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var m entity.Message
+
+	for rows.Next() {
+		err := rows.Scan(&m.Id, &m.Text)
+
+		if err != nil {
+			log.Println("データベース取得失敗")
+			log.Fatal(err)
+		}
+	}
+
+	return m.Text
+}
+
+func Update(m entity.Message) {
+	db := openDB()
+	defer db.Close()
+
+	// SQLの実行
+	ins, err := db.Prepare("UPDATE messages set message_text = ?  where message_id = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ins.Close()
+
+	// クエリ実行
+	res, err := ins.Exec(m.Text, m.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Insert(message string) {
@@ -99,11 +154,10 @@ func Delete(id string) {
 	}
 
 	// 結果の取得
-	lastInsertID, err := res.LastInsertId()
+	_, err = res.LastInsertId()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(lastInsertID)
 }
 
 func openDB() *sql.DB {
