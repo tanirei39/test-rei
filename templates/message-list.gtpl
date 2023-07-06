@@ -10,12 +10,14 @@
       <th>ID</th>
       <th>メッセージ</th>
       <th>削除</th>
+      <th>編集</th>
     </tr>
     {{ range . }}
     <tr>
       <td>{{.Id}}</td>
       <td>{{.Text}}</td>
       <td> <button onclick="location.href='./message-delete/{{.Id}}'">削除</button></td>
+      <td> <button onclick="location.href='./message-edit/{{.Id}}'">編集</button></td>
     </tr>
     {{ end }}
   </table>
